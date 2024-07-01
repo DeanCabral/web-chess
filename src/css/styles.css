@@ -1,0 +1,104 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #1c1d1f;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: red solid 1px;
+    height: 100vh;
+}
+
+.board-container {
+    border: red solid 1px;
+}
+
+.review-container {
+    border: red solid 1px;
+}
+
+#chessboard {
+    display: grid;
+    grid-template-columns: repeat(8, 100px);
+    grid-template-rows: repeat(8, 100px);
+    gap: 0;
+    border: 2px solid black;
+    max-width: 90vh;
+    max-height: 90vh;
+    margin: auto;
+}
+
+.square {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2vw;
+    user-select: none; 
+    -webkit-user-drag: none; 
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.square.light {
+    background-color: #b1b1b1;
+}
+
+.square.dark {
+    background-color: #646464;
+}
+
+.square.highlight {
+    border: 5px solid rgb(255, 255, 255, 100);
+}
+
+.square.legal {
+    
+}
+
+.square.selected {
+    background-color: rgb(70, 96, 153);
+}
+
+.piece {
+    opacity: 1;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-drag: none; 
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.piece:active {
+    opacity: 1;
+    cursor: grabbing;
+    cursor: -moz-grabbing;
+    cursor: -webkit-grabbing;
+}
+
+.grabbable {
+    cursor: move;
+    cursor: grab;
+    cursor: -moz-grab;
+    cursor: -webkit-grab;
+}
+
+.grabbable:hover {
+    cursor: grab;
+    cursor: -moz-grab;
+    cursor: -webkit-grab;
+}
+
+.grabbable:active {
+    cursor: grabbing;
+    cursor: -moz-grabbing;
+    cursor: -webkit-grabbing;
+}
