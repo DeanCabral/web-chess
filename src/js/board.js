@@ -1,6 +1,3 @@
-let selected = null;
-let chessboard = [];
-
 const AUDIO = {
     GameStart: 'assets/audio/game-start.mp3',
     GameEnd: 'assets/audio/game-end.mp3',
@@ -14,162 +11,144 @@ const AUDIO = {
 }
 
 const PIECE = {
-    'r': 'black-rook', 'n': 'black-knight', 'b': 'black-bishop', 'q': 'black-queen', 'k': 'black-king', 'p': 'black-pawn',
-    'R': 'white-rook', 'N': 'white-knight', 'B': 'white-bishop', 'Q': 'white-queen', 'K': 'white-king', 'P': 'white-pawn'
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    generate();
-});
-
-function generate() {
-    const board = document.getElementById('chessboard');
-    const fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-    chessboard = load(fen);
-
-    console.log(chessboard)
-
-    for (let i = 0; i < 64; i++) {
-        const piece = chessboard[i] !== '' ? chessboard[i] : null;
-        const square = createSquare(i, piece);
-        board.appendChild(square);
-    }
+    'k': {id: 'k', type: 'king', value: 100},
+    'q': {id: 'q', type: 'queen', value: 9},
+    'r': {id: 'r', type: 'rook', value: 5},
+    'n': {id: 'n', type: 'knight', value: 3},
+    'b': {id: 'b', type: 'bishop', value: 3},
+    'p': {id: 'p', type: 'pawn', value: 1},
+    
+    'K': {id: 'K', type: 'king', value: 100},
+    'Q': {id: 'Q', type: 'queen', value: 9},
+    'R': {id: 'R', type: 'rook', value: 5},
+    'N': {id: 'N', type: 'knight', value: 3},
+    'B': {id: 'B', type: 'bishop', value: 3},
+    'P': {id: 'P', type: 'pawn', value: 1},
 }
 
-function load(fen) {
-    const pieces = [];
-    const fenRows = fen.split(' ')[0].split('/');
-    fenRows.forEach(row => {
-        for (const char of row) {
-            if (isNaN(char)) {
-                pieces.push(PIECE[char]);
-            } else {
-                for (let i = 0; i < parseInt(char); i++) {
-                    pieces.push('');
-                }
+class Chessboard {
+
+    constructor() {
+        this.fen = `rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`;
+        this.pieces = this.parseFEN(this.fen);
+        this.selected = null;
+    }
+
+    setup() {
+        const board = document.getElementById('chessboard');
+
+        for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+                const square = document.createElement('div');
+                square.classList.add('square');
+                square.classList.add((row + col) % 2 === 0 ? 'light' : 'dark');
+                square.setAttribute('data-index', row * 8 + col);
+
+                square.addEventListener('dragenter', (e) => {
+                    e.preventDefault();
+                    e.target.classList.add('highlight');             
+                });
+
+                square.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.target.classList.add('highlight');             
+                });
+
+                square.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    e.target.classList.remove('highlight');            
+                });
+
+                square.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    console.log('drop', e.target)
+                    this.playSFX(AUDIO.MoveSelf);
+                    e.target.appendChild(this.selected);
+                    e.target.classList.remove('highlight');
+                });
+
+                board.appendChild(square);
             }
         }
-    });        
-    return pieces;
-}
 
-function update(fen) {
-    const pieces = load(fen);
+        this.load();
+    }
 
-    for (let i = 0; i < 64; i++) {
-        chessboard[i] = pieces[i];
-        const square = document.querySelector(`[data-index="${i}"]`);
-        square.innerHTML = '';
+    load() {
+        this.pieces.forEach((row, rIndex) => {
+            row.forEach((piece, cIndex) => {
+                if (piece === '') return;
 
-        if (pieces[i] !== '') {
-            const pieceElement = createPiece(pieces[i]);
-            square.appendChild(pieceElement);
-        }
+                const index = rIndex * 8 + cIndex;
+                const square = document.querySelector(`[data-index='${index}']`);
+                const element = document.createElement('img');
+
+                element.classList.add('piece');
+                element.src = `assets/svgs/${piece.toLowerCase() === piece ? 'black' : 'white'}-${PIECE[piece].type}.svg`;
+                element.alt = PIECE[piece].type;
+
+                element.addEventListener('click', (e) => {
+                    const selections = document.querySelectorAll('.selected');
+                    selections.forEach(s => s.classList.remove('selected'));
+
+                    if (this.selected === e.target) {
+                        this.selected = null;
+                        e.target.parentNode.classList.remove('selected');
+                    } else {
+                        if (this.selected) this.selected.parentNode.classList.remove('selected');
+                        this.selected = e.target;
+                        e.target.parentNode.classList.add('selected');
+                    }
+                });
+
+                element.addEventListener('dragstart', (e) => {
+                    const selections = document.querySelectorAll('.selected');
+                    selections.forEach(s => s.classList.remove('selected'));
+
+                    this.selected = e.target;
+                    e.target.parentNode.classList.add('selected');
+                    setTimeout(() => {
+                        e.target.classList.add('hidden');
+                    }, 0);     
+                });
+
+                element.addEventListener('dragend', (e) => {
+                    const selections = document.querySelectorAll('.selected');
+                    selections.forEach(s => s.classList.remove('selected'));
+
+                    this.selected = null;
+                    e.target.parentNode.classList.remove('selected');
+                    e.target.classList.remove('hidden');
+                });
+
+                square.appendChild(element);
+            });
+        });
+    }
+
+    playSFX(src) {
+        const audio = document.getElementById('audioSFX');
+        audio.src = src;
+        audio.play();
+    }
+
+    parseFEN(fen) {
+        const [placement] = fen.split(' ');
+        const rows = placement.split('/');
+        return rows.map(row => {
+            const expanded = [];
+            for (const char of row) {
+                if (isNaN(char)) expanded.push(char);
+                else {
+                    for (let i = 0; i < parseInt(char); i++) {
+                        expanded.push('');
+                    }
+                }
+            }
+            return expanded;
+        });
     }
 }
 
-function onClick(e) {
-    console.log(e.target)
-
-    const selections = document.querySelectorAll('.selected');
-    selections.forEach((e) => e.classList.remove('selected'));
-
-    
-
-    if (chessboard[e.target.getAttribute('data-index')]) {
-        if (selected == e.target) selected = null;
-        else {
-            selected = e.target;
-            e.target.classList.add('selected');
-        }        
-    }
-}
-
-function onDragStart(e) {
-    e.target.classList.add('grabbable');
-    e.dataTransfer.setData('text/plain', e.target.parentElement.getAttribute('data-index'));
-}
-
-function onDragOver(e) {
-    e.preventDefault();
-    e.currentTarget.classList.add('highlight');
-}
-
-function onDragLeave(e) {
-    e.preventDefault();
-    e.currentTarget.classList.remove('highlight');
-}
-
-function onDragEnd(e) {
-    e.preventDefault();
-    e.target.classList.remove('grabbable');
-}
-
-function onDrop(e) {
-    e.preventDefault();
-
-    const startIndex = e.dataTransfer.getData('text/plain');
-    const endIndex = e.target.getAttribute('data-index') || e.target.parentElement.getAttribute('data-index');
-
-    e.currentTarget.classList.remove('highlight');
-
-    if (startIndex !== endIndex) {
-        movePiece(startIndex, endIndex);
-        playSFX(AUDIO.MoveSelf);
-    }
-}
-
-function movePiece(startIndex, endIndex) {
-    const startSquare = document.querySelector(`[data-index='${startIndex}']`);
-    const endSquare = document.querySelector(`[data-index='${endIndex}']`);
-    const piece = startSquare.querySelector('img');
-
-    if (endSquare && piece) {
-        endSquare.innerHTML = '';
-        endSquare.appendChild(piece);
-        chessboard[endIndex] = chessboard[startIndex];
-        chessboard[startIndex] = '';
-        startSquare.innerHTML = '';
-    }
-}
-
-function createSquare(index, piece) {
-    const square = document.createElement('div');
-    square.classList.add('square');
-    square.classList.add((Math.floor(index / 8) + index) % 2 === 0 ? 'light' : 'dark');
-    square.setAttribute('data-index', index);
-
-    if (piece) {
-        const pieceElement = createPiece(piece);
-        square.classList.add('grabbable');
-        square.appendChild(pieceElement);
-    }
-
-    square.classList.add('legal');
-
-    square.addEventListener('click', onClick);
-    square.addEventListener('dragstart', onDragStart);
-    square.addEventListener('dragover', onDragOver);
-    square.addEventListener('dragend', onDragEnd);
-    square.addEventListener('dragleave', onDragLeave);
-    square.addEventListener('drop', onDrop);
-
-    return square;
-}
-
-function createPiece(piece) {
-    const pieceElement = document.createElement('img');
-    pieceElement.src = `/assets/svgs/${piece}.svg`;
-    pieceElement.width = 80;
-    pieceElement.style.pointerEvents = 'none';
-    pieceElement.classList.add('piece');
-    // pieceElement.setAttribute('draggable', true);
-
-    return pieceElement;
-}
-
-function playSFX(src) {
-    const audio = document.getElementById('audioSFX');
-    audio.src = src;
-    audio.play();
-}
+let board = new Chessboard();
+board.setup();

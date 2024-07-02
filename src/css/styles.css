@@ -48,6 +48,10 @@ body {
     -ms-user-select: none;
 }
 
+.square.grabbable {
+    cursor: grabbing;
+}
+
 .square.light {
     background-color: #b1b1b1;
 }
@@ -61,7 +65,7 @@ body {
 }
 
 .square.legal {
-    
+    background-color: rgb(108, 137, 199);
 }
 
 .square.selected {
@@ -71,10 +75,11 @@ body {
 .piece {
     opacity: 1;
     cursor: grab;
-    user-select: none;
+    width: 80%;
+    /* user-select: none;
     -webkit-user-drag: none; 
     -moz-user-select: none;
-    -ms-user-select: none;
+    -ms-user-select: none; */
 }
 
 .piece:active {
@@ -101,4 +106,8 @@ body {
     cursor: grabbing;
     cursor: -moz-grabbing;
     cursor: -webkit-grabbing;
+}
+
+.hidden {
+    visibility: hidden;
 }
